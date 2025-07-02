@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Treinos da Academia</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .card {
+            box-shadow: 0 4px- 8px rgba(0,0,0,0.1);
+            border: none;
+        }
+        h1, h2 {
+            font-weight: 700;
+            color: #343a40;
+        }
+        /* Efeito de HOVER na tabela principal */
+        .treino-row:hover {
+            background-color: #e9ecef !important; /* Cor de fundo mais escura no hover */
+            transform: scale(1.01); /* Efeito de 'levantar' a linha */
+            transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .details-row {
+            background-color: #fdfdfd;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container mt-5 mb-5">
+
+    <div class="card mb-4">
+        <div class="card-body p-4">
+            <h1 class="card-title text-center mb-4">Registrar Novo Treino</h1>
+            <form id="form-treino">
+                <div class="row">
+                    <div class="col-md-6 mb-3"><label for="aluno" class="form-label">Selecione o Aluno:</label><select id="aluno" name="alunoId" class="form-select" required></select></div>
+                    <div class="col-md-6 mb-3"><label for="professor" class="form-label">Selecione o Professor:</label><select id="professor" name="professorId" class="form-select" required></select></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3"><label for="dataInicio" class="form-label">Data de Início:</label><input type="date" id="dataInicio" name="dataInicio" class="form-control" required></div>
+                    <div class="col-md-6 mb-3"><label for="dataFim" class="form-label">Data de Fim:</label><input type="date" id="dataFim" name="dataFim" class="form-control" required></div>
+                </div>
+                <hr class="my-4"><h2 class="h4">Exercícios</h2>
+                <div id="exercicios-container"></div>
+                <button type="button" class="btn btn-primary mt-2" id="btn-add-exercicio">Adicionar Exercício</button>
+                <hr class="my-4">
+                <div class="d-grid"><button type="submit" class="btn btn-success btn-lg">Salvar Treino</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div id="message" style="display:none;"></div>
+
+    <div class="card">
+        <div class="card-body p-4">
+            <h2 class="card-title text-center mb-4">Treinos Registrados</h2>
+            <div id="lista-treinos-container" class="table-responsive">
+                <table id="tabela-treinos" class="table table-hover">
+                    <thead class="table-dark">
+                    <tr>
+                        <th>Aluno</th>
+                        <th>Professor</th>
+                        <th>Início</th>
+                        <th>Fim</th>
+                        <th>Detalhes</th>
+                    </tr>
+                    </thead>
+                    <tbody id="corpo-tabela-treinos">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- (Declaração de variáveis e outras funções continuam as mesmas) ---
+        const apiBaseUrl = 'http://localhost:8080/api';
+        const alunoSelect = document.getElementById('aluno');
+        const professorSelect = document.getElementById('professor');
+        const form = document.getElementById('form-treino');
+        const exerciciosContainer = document.getElementById('exercicios-container');
+        const btnAddExercicio = document.getElementById('btn-add-exercicio');
+        const messageDiv = document.getElementById('message');
+        const corpoTabela = document.getElementById('corpo-tabela-treinos');
+
+        // --- FUNÇÃO carregarTreinos ATUALIZADA ---
+        async function carregarTreinos() {
+            try {
+                const response = await fetch(`${apiBaseUrl}/treinos`);
+                if (!response.ok) throw new Error('Falha ao carregar treinos.');
+                const treinos = await response.json();
+
+                corpoTabela.innerHTML = '';
+
+                if (treinos.length === 0) {
+                    corpoTabela.innerHTML = '<tr><td colspan="5" class="text-center">Nenhum treino registrado ainda.</td></tr>';
+                    return;
+                }
+
+                treinos.forEach(treino => {
+                    // Formata as datas
+                    const dataInicioFormatada = new Date(treino.dataInicio + 'T00:00:00').toLocaleDateString('pt-BR');
+                    const dataFimFormatada = new Date(treino.dataFim + 'T00:00:00').toLocaleDateString('pt-BR');
+
+                    // Cria a linha principal (visível)
+                    const row = document.createElement('tr');
+                    row.className = 'treino-row'; // Classe para o efeito de hover
+                    row.setAttribute('data-bs-toggle', 'collapse'); // Atributo do Bootstrap para o acordeão
+                    row.setAttribute('data-bs-target', `#treino-details-${treino.id}`); // Alvo que será expandido
+                    row.innerHTML = `
+                        <td>${treino.nomeAluno}</td>
+                        <td>${treino.nomeProfessor}</td>
+                        <td>${dataInicioFormatada}</td>
+                        <td>${dataFimFormatada}</td>
+                        <td>
+                            <button class="btn btn-outline-secondary btn-sm">
+                                Ver Exercícios <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </td>
+                    `;
+                    corpoTabela.appendChild(row);
+
+                    // Cria a linha de detalhes (escondida)
+                    const detailsRow = document.createElement('tr');
+                    detailsRow.className = 'collapse'; // Classe do Bootstrap para começar escondido
+                    detailsRow.id = `treino-details-${treino.id}`;
+
+                    // Gera o HTML da tabela de exercícios aninhada
+                    let exerciciosHtml = '<div class="p-3"><h5 class="mb-3">Exercícios do Treino:</h5><table class="table table-sm table-bordered"><thead><tr class="table-light"><th>Exercício</th><th>Grupo</th><th>Séries</th><th>Repetições</th><th>Carga</th><th>Obs.</th></tr></thead><tbody>';
+                    treino.exercicios.forEach(ex => {
+                        exerciciosHtml += `
+                            <tr>
+                                <td>${ex.nome}</td>
+                                <td>${ex.grupoMuscular}</td>
+                                <td>${ex.series}</td>
+                                <td>${ex.repeticoes}</td>
+                                <td>${ex.carga} Kg</td>
+                                <td>${ex.observacoes || 'N/A'}</td>
+                            </tr>`;
+                    });
+                    exerciciosHtml += '</tbody></table></div>';
+
+                    detailsRow.innerHTML = `<td colspan="5" class="p-0 details-row">${exerciciosHtml}</td>`;
+                    corpoTabela.appendChild(detailsRow);
+                });
+
+            } catch (error) {
+                console.error('Erro ao carregar treinos:', error);
+                corpoTabela.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Erro ao carregar treinos.</td></tr>';
+            }
+        }
+
+        // --- (Restante do JavaScript continua igual) ---
+        async function popularSelects() {
+            try {
+                const [alunosResponse, profResponse] = await Promise.all([
+                    fetch(`${apiBaseUrl}/alunos`),
+                    fetch(`${apiBaseUrl}/professores`)
+                ]);
+                if (!alunosResponse.ok || !profResponse.ok) { throw new Error('Falha na resposta do servidor.'); }
+                const alunos = await alunosResponse.json();
+                alunos.forEach(aluno => { alunoSelect.add(new Option(aluno.nome, aluno.id)); });
+                const professores = await profResponse.json();
+                professores.forEach(prof => { professorSelect.add(new Option(`${prof.nome} (CREF: ${prof.cref})`, prof.id)); });
+            } catch (error) {
+                console.error('Erro ao buscar dados iniciais:', error);
+                showMessage('Falha ao carregar dados do servidor. Verifique se o back-end está no ar.', 'danger');
+            }
+        }
+        let exercicioCount = 0;
+        btnAddExercicio.addEventListener('click', () => {
+            exercicioCount++;
+            const bloco = document.createElement('div');
+            bloco.className = 'exercicio-bloco p-3 mb-3';
+            bloco.id = `bloco-${exercicioCount}`;
+            bloco.innerHTML = `<button type="button" class="btn btn-danger btn-sm float-end" onclick="document.getElementById('bloco-${exercicioCount}').remove()">X</button><h5 class="h6">Exercício ${exercicioCount}</h5><div class="row"><div class="col-md-6 mb-2"><label class="form-label-sm">Nome:</label><input type="text" class="ex-nome form-control form-control-sm" required></div><div class="col-md-6 mb-2"><label class="form-label-sm">Grupo Muscular:</label><input type="text" class="ex-grupo form-control form-control-sm" required></div><div class="col-md-3 mb-2"><label class="form-label-sm">Séries:</label><input type="number" class="ex-series form-control form-control-sm" required></div><div class="col-md-3 mb-2"><label class="form-label-sm">Repetições:</label><input type="number" class="ex-repeticoes form-control form-control-sm" required></div><div class="col-md-3 mb-2"><label class="form-label-sm">Carga (Kg):</label><input type="number" step="0.5" class="ex-carga form-control form-control-sm" required></div><div class="col-md-3 mb-2"><label class="form-label-sm">Observações:</label><input type="text" class="ex-obs form-control form-control-sm"></div></div>`;
+            exerciciosContainer.appendChild(bloco);
+        });
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const exercicios = [];
+            document.querySelectorAll('.exercicio-bloco').forEach(bloco => {
+                exercicios.push({
+                    nome: bloco.querySelector('.ex-nome').value, grupoMuscular: bloco.querySelector('.ex-grupo').value,
+                    series: parseInt(bloco.querySelector('.ex-series').value), repeticoes: parseInt(bloco.querySelector('.ex-repeticoes').value),
+                    carga: parseFloat(bloco.querySelector('.ex-carga').value), observacoes: bloco.querySelector('.ex-obs').value
+                });
+            });
+            if (exercicios.length === 0) { showMessage('Adicione pelo menos um exercício.', 'warning'); return; }
+            const payload = {
+                alunoId: parseInt(alunoSelect.value), professorId: parseInt(professorSelect.value),
+                dataInicio: document.getElementById('dataInicio').value, dataFim: document.getElementById('dataFim').value,
+                exercicios: exercicios
+            };
+            try {
+                const response = await fetch(`${apiBaseUrl}/treinos`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+                });
+                if (response.ok) {
+                    const novoTreino = await response.json();
+                    showMessage(`Treino ID ${novoTreino.id} salvo com sucesso!`, 'success');
+                    form.reset();
+                    exerciciosContainer.innerHTML = '';
+                    carregarTreinos();
+                } else { throw new Error('Falha ao salvar o treino.'); }
+            } catch (error) {
+                console.error('Erro ao enviar formulário:', error);
+                showMessage(error.message, 'danger');
+            }
+        });
+        function showMessage(msg, type = 'info') {
+            messageDiv.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">${msg}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`;
+            messageDiv.style.display = 'block';
+        }
+
+        popularSelects();
+        carregarTreinos();
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
