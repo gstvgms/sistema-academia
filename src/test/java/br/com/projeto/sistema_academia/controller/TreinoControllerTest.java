@@ -39,7 +39,7 @@ class TreinoControllerTest {
         professorRepository.deleteAll();
 
         Aluno aluno = new Aluno();
-        aluno.setNome("Aluno Para Teste Funcional");
+        aluno.setNome("Aluno para Realizar Teste Funcional");
         alunoRepository.save(aluno);
     }
 

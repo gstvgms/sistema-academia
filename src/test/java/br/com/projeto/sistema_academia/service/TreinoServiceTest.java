@@ -45,7 +45,7 @@ class TreinoServiceTest {
 
         Aluno alunoMock = new Aluno();
         alunoMock.setId(1L);
-        alunoMock.setNome("Aluno Teste");
+        alunoMock.setNome("Aluno somente Para Testes");
 
         Professor profMock = new Professor();
         profMock.setId(1L);
@@ -57,7 +57,7 @@ class TreinoServiceTest {
         Treino treinoCriado = treinoService.criarTreino(dto);
 
         assertNotNull(treinoCriado);
-        assertEquals("Aluno Teste", treinoCriado.getAluno().getNome());
+        assertEquals("Aluno somente Para Testes", treinoCriado.getAluno().getNome());
         assertEquals(1, treinoCriado.getExercicios().size());
     }
 }
