@@ -45,7 +45,7 @@ class TreinoServiceTest {
 
         Aluno alunoMock = new Aluno();
         alunoMock.setId(1L);
-        alunoMock.setNome("Aluno somente Para Testes");
+        alunoMock.setNome("Aluno somente Para Testes"); // nome fictício para o aluno
 
         Professor profMock = new Professor();
         profMock.setId(1L);
