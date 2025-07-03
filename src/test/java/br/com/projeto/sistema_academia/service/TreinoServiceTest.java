@@ -57,7 +57,7 @@ class TreinoServiceTest {
         Treino treinoCriado = treinoService.criarTreino(dto);
 
         assertNotNull(treinoCriado);
-        assertEquals("Aluno somente Para Testes para o Professor", treinoCriado.getAluno().getNome());
+        assertEquals("Aluno somente Para Testes Professor", treinoCriado.getAluno().getNome());
         assertEquals(1, treinoCriado.getExercicios().size());
     }
 }
