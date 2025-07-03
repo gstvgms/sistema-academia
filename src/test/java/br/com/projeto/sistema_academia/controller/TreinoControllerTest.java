@@ -39,7 +39,7 @@ class TreinoControllerTest {
         professorRepository.deleteAll();
 
         Aluno aluno = new Aluno();
-        aluno.setNome("Aluno para Realizar Teste Funcional");
+        aluno.setNome("Aluno para Realizar Testes");
         alunoRepository.save(aluno);
     }
 
@@ -50,6 +50,6 @@ class TreinoControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].nome").value("Aluno Para Teste Funcional"));
+                .andExpect(jsonPath("$[0].nome").value("Aluno para Realizar Testes"));
     }
 }
